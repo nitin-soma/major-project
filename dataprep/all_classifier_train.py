@@ -4,8 +4,19 @@ import numpy as np
 from tensorflow.keras import applications as ap
 
 models =[ap.InceptionV3,ap.ResNet50,ap.VGG16]
+# import kagglehub
+# import shutil
 data_paths =['Datasets/Food']
 model_paths= ['models/Food']
+# dataset_path = kagglehub.dataset_download("trolukovich/food11-image-dataset")
+# print("Path to dataset files:", dataset_path)
+# # Move downloaded dataset to Datasets/Food
+# target_path = "Datasets/Food"
+# try:
+#     shutil.move(dataset_path, target_path)
+#     print(f"Dataset moved to {target_path}")
+# except Exception as e:
+#     print(f"Could not move dataset: {e}")
 backbone_names =['InceptionV3',"ResNet","VGG16"]
 
 for j,path in enumerate(data_paths):
@@ -31,7 +42,7 @@ for j,path in enumerate(data_paths):
         print(f'Model = {backbone_names[i]}')
         print(f"Optimizer = {opt}")
         
-        model.compile(optimizer=opt,loss='categorical_crossentropy',metrics='acc')
+        model.compile(optimizer=opt,loss='categorical_crossentropy',metrics=['accuracy'])
         try:
             os.makedirs(os.path.join(model_paths[j],backbone_names[i]))
         except:

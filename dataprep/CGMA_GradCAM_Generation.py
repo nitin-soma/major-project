@@ -1,5 +1,5 @@
-from .utils import get_img,all_img_paths
-from .gradcam import *
+from dataprep.utils import get_img,all_img_paths
+from dataprep.gradcam import *
 import tensorflow as tf
 import os
 import numpy as np

@@ -62,34 +62,26 @@ class ResBlockExtension(tf.keras.Model):
         return X
 
 class SFT_NET(tf.keras.Model):
-    def __init__(self,batch_size,n_cond):
+    def __init__(self,n_cond):
         super(SFT_NET, self).__init__()
         self.conv0 = Conv2D(64,3,padding='same')
         self.sft_branch= ResBlockExtension()
         self.CondNet = tf.keras.Sequential(
-        [Conv2D(128,4,strides=1,padding='same'), LeakyReLU(0.1) , Conv2D(128,1,padding='same'), 
+        [Conv2D(128,4,strides=1,padding='same'), LeakyReLU(0.1) , Conv2D(128,1,padding='same'),
         LeakyReLU(0.1),Conv2D(128,1,padding='same'), LeakyReLU(0.1),
         Conv2D(128,1,padding='same'), LeakyReLU(0.1),Conv2D(32,3,padding='same')])
-        
-        self.batch_size = batch_size
+
         self.n_cond = n_cond
         self.fin_conv=Conv2D(3,3,padding='same')
-    
+
     def call(self,x):
-        #print(x[1].shape)
+        batch_size = 16  # Fixed batch size
         d=tf.transpose(x[1],perm=[0,3,1,2])
-        #print(d.shape)
-        conds=[[self.CondNet(tf.expand_dims(tf.expand_dims(d[i][j],axis=0),axis=-1)) for j in range(self.n_cond)] for i in range(self.batch_size)]
-        #print(len(conds),len(conds[0]),conds[0][0].shape)
+        conds=[[self.CondNet(tf.expand_dims(tf.expand_dims(d[i][j],axis=0),axis=-1)) for j in range(self.n_cond)] for i in range(batch_size)]
         fea = self.conv0(x[0])
         res = self.sft_branch(fea, conds)
         fea = fea + res
         out =self.fin_conv(fea)
-#         cond = self.CondNet(x[1])
-#         fea = self.conv0(x[0])
-#         res = self.sft_branch([fea, cond])
-#         fea = fea + res
-#         out = Conv2D(3,3,padding='same')(fea)
         return out
 
 def create_local_sft(input_shape1=(256,256,3),input_shape2=(256,256,8),batch_size=5,n_conds=8):
@@ -100,12 +92,12 @@ def create_local_sft(input_shape1=(256,256,3),input_shape2=(256,256,8),batch_siz
             inp_shape2  --> Shape of Input Cumilative Gradcam Maps
             batch_size  --> Batch Size
             n_conds     --> Number of Conditional Maps Provided
-    
+
     Outputs:
-            model       --> The Global SFT Model.
+            model       --> The Local SFT Model.
     '''
-    input1 = tf.keras.Input(input_shape1)
-    input2 = tf.keras.Input(input_shape2)
-    m= SFT_NET(batch_size,n_conds)([input1,input2])
+    input1 = tf.keras.Input((batch_size,) + input_shape1)
+    input2 = tf.keras.Input((batch_size,) + input_shape2)
+    m= SFT_NET(n_conds)([input1,input2])
     model= tf.keras.models.Model(inputs=[input1,input2],outputs=m)
     return model

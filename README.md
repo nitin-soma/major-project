@@ -1,6 +1,12 @@
-# Repository For the Paper "Interpreting CNNs using Conditional GANs by representing CNNs as Conditional Priors"
+# Repository For the Paper "Interpreting CNNs using Conditional GANs by representing CNNs as Conditional Priors" (Modified for Contrastive Learning)
 
-The Paper introduced a method to interpret why a CNN makes its predictions by training a GAN to understand CNNs. We propose a novel method that trains conditional Generative Adversarial Networks to generate visual explanations of Convolutional Neural Networks (CNNs). To comprehend a CNN, the GAN is trained with information on how the CNN processes an image when making predictions. Supplying that information has two main challenges. How to represent these information in a form feedable to the GANs and how to effectively feed the representation to the GAN. To solve these issues, we developed a suitable representation of the CNN using cumulatively averaging intermediate explainability maps. We also propose two methods to feed the representations to the GAN and to choose an effective training strategy. Our approach learned the general aspects of CNNs and was agnostic to  datasets and CNN architectures. The study includes both a qualitative and quantitative evaluation of the interpretability maps in comparison with state of the art approaches. We found that the initial layers of CNNs and final layers are equally crucial for explaining CNNs upon interpreting the GAN.
+The original paper introduced a method to interpret why a CNN makes its predictions by training a GAN to understand CNNs using GradCAM maps as supervision. This modified version removes the dependency on interpretation maps (GradCAM) and replaces external supervision with contrastive learning. The generator now learns to produce explanations directly from CNN features and input data, guided by the discriminator and a contrastive objective that encourages similar explanations for similar classes.
+
+Key modifications:
+- No GradCAM generation needed.
+- Contrastive loss replaces external supervision.
+- Generator learns to produce explanations directly from CNN features and data.
+- Discriminator and contrastive objective guide the generator.
 ## Our Main Contributions via this work are :
 * Introduced a GAN that understands the general working of CNNs.
 * Introduced a method to represent CNN's operations as conditional priors.

@@ -6,7 +6,7 @@ import tensorflow as tf
 
 def load_all_data():
     np.random.seed(7)
-    files = glob.glob('npys/*.npy')
+    files = glob.glob('../npys/*.npy')
     print(files)
     data=np.concatenate([np.load(i,allow_pickle=True)[:5000]for i in files])
     np.random.shuffle(data)
@@ -18,21 +18,32 @@ def load_all_data():
 
 def process_dataset(data):
     inp_images    = np.array(data[:,0].tolist())/255.
-    #cgms          = np.array(data[:,1].tolist())/255.
-    #cgms          = np.array([cv2.cvtColor(i,cv2.COLOR_RGB2GRAY)/255. for j in i for i in data[:1].tolist()])
-    cgms=[]
-    count=0
+    # Load CNN features instead of CGMs
+    features = []
+    count = 0
     for i in np.array(data[:,1].tolist()):
-        li=[]
-        for j in i:
-            li.append(cv2.cvtColor(j,cv2.COLOR_RGB2GRAY)/255.)
-        print(count,end='\r')
-        count+=1
-        cgms.append(li)
-    cgms=np.array(cgms)    
-    cgms=tf.constant(cgms)
-    cgms=tf.transpose(cgms,perm=[0,2,3,1]).numpy()
+        # Assume i is the path or the feature array
+        # For now, assume data[:,1] is feature arrays
+        features.append(i)
+        print(count, end='\r')
+        count += 1
+    features = np.array(features)
+    # Resize features to (64,64,8) if necessary
+    # Features are loaded as (1, h, w, c), resize to (64,64,8)
+    resized_features = []
+    for feat in features:
+        feat_resized = tf.image.resize(feat, (64, 64)).numpy()
+        # Squeeze batch dimension
+        feat_resized = feat_resized[0]  # Now (64,64,c)
+        if feat_resized.shape[-1] > 8:
+            feat_resized = feat_resized[:, :, :8]
+        elif feat_resized.shape[-1] < 8:
+            # Pad with zeros
+            pad = np.zeros((64, 64, 8 - feat_resized.shape[-1]))
+            feat_resized = np.concatenate([feat_resized, pad], axis=-1)
+        resized_features.append(feat_resized)
+    features = np.array(resized_features)
     out_images    = np.array(data[:,2].tolist())/255.
     y             = np.array(data[:,3].tolist())
-    print('cgms shape = ',cgms.shape)
-    return (inp_images,cgms,out_images,y)
+    print('features shape = ', features.shape)
+    return (inp_images, features, out_images, y)
